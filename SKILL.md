@@ -157,12 +157,12 @@ Visual packet defaults:
 npm run check:mermaid -- --files <explanation-packet.md>
 
 # Check explanation completeness (12-item checklist)
-npx tsx skills/explain/scripts/check-explanation-completeness.ts --latest
-npx tsx skills/explain/scripts/check-explanation-completeness.ts --packet <path.md>
-npx tsx skills/explain/scripts/check-explanation-completeness.ts --latest --json
+npx tsx .agents/skills/explain/scripts/check-explanation-completeness.ts --latest
+npx tsx .agents/skills/explain/scripts/check-explanation-completeness.ts --packet <path.md>
+npx tsx .agents/skills/explain/scripts/check-explanation-completeness.ts --latest --json
 
 # Choose the best visual format
-npx tsx skills/explain/scripts/choose-visual-format.ts --question <question>
+npx tsx .agents/skills/explain/scripts/choose-visual-format.ts --question <question>
 ```
 
 ## Workflow

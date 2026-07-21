@@ -10,8 +10,8 @@
  * Flow: argv -> resolve packet path (`--packet <path>` | `--latest`) -> read markdown -> evaluate
  * checklist rows -> aggregate score and tier -> print report.
  *
- * @testing CLI: npx tsx skills/explain/scripts/check-explanation-completeness.ts --latest
- * @testing CLI: npx tsx skills/explain/scripts/check-explanation-completeness.ts --packet <path-to-packet.md> [--json]
+ * @testing CLI: npx tsx .agents/skills/explain/scripts/check-explanation-completeness.ts --latest
+ * @testing CLI: npx tsx .agents/skills/explain/scripts/check-explanation-completeness.ts --packet <path-to-packet.md> [--json]
  *
  * @see skills/explain/SKILL.md - Canonical explain skill that defines explanation packet shape and checklist semantics this scanner enforces.
  * @see skills/explain/references/visual-packet-patterns.md - Visual packet pattern catalog referenced by checklist item heuristics in this script.

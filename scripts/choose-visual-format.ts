@@ -9,9 +9,9 @@
  * Flow: argv -> (`--question` -> detectType | `--type` value) -> getRecommendedFormats -> print
  * labeled rows with when/avoid heuristics and copy/paste examples.
  *
- * @testing CLI: npx tsx skills/explain/scripts/choose-visual-format.ts --help
- * @testing CLI: npx tsx skills/explain/scripts/choose-visual-format.ts --type flow
- * @testing CLI: npx tsx skills/explain/scripts/choose-visual-format.ts --question "How does the auth flow work?"
+ * @testing CLI: npx tsx .agents/skills/explain/scripts/choose-visual-format.ts --help
+ * @testing CLI: npx tsx .agents/skills/explain/scripts/choose-visual-format.ts --type flow
+ * @testing CLI: npx tsx .agents/skills/explain/scripts/choose-visual-format.ts --question "How does the auth flow work?"
  *
  * @see skills/explain/SKILL.md - Canonical explain skill that documents this helper when authors need a quick visual-format pick before drafting packet diagrams.
  * @see skills/explain/references/visual-packet-patterns.md - Pattern reference whose packet-shape heuristics align with the Mermaid and ASCII options listed in this script's matrix.
