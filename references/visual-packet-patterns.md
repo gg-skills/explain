@@ -1,6 +1,8 @@
 # Visual Packet Patterns
 
-## Packet Shape Selection
+Chat vs HTML placement is owned by `SKILL.md` (Output Contract). This file owns **which visual types to use**. Put those visuals on the HTML page. Include every type that the subject needs for full understanding.
+
+## Visual Type Selection
 
 | Question Shape | Primary Visual | Use When | Avoid When |
 | --- | --- | --- | --- |
@@ -10,25 +12,22 @@
 | How do options differ? | comparison matrix table | the question is tradeoff-heavy and the user must compare paths quickly | the question is causal flow rather than side-by-side comparison |
 | What does the user experience? | ASCII user journey | terminal readability matters more than rendered diagrams | system internals are the real focus |
 | Which files or contracts matter? | key-files table plus optional mini-flowchart | the user needs concrete starting points in the repo | the explanation is conceptual and not yet tied to code |
+| How are types or records related? | Mermaid `classDiagram` or `erDiagram` | structure, ownership, or cardinality is the question | the question is runtime behavior |
+| When do phases happen? | Mermaid `gantt` or timeline | order plus duration matters | the question is a single instant |
 
-## Scan-Speed Rules
+Use more than one of these on the HTML page when each answers a different part of the question (for example a flowchart plus a sequence diagram plus a file table).
 
-1. Lead with one direct answer sentence before the visual.
-2. Prefer one primary visual. Add a second one only when it removes real ambiguity.
-3. Default to vertical diagrams when the medium is narrow or scan speed matters.
-4. Use `LR` only when horizontal causality is materially clearer than top-down flow.
-5. Quote Mermaid labels when they contain punctuation or multiple words:
-   - `A["Question or label"]`
-6. Split wide diagrams into stacked subgraphs or multiple mini-diagrams instead of shrinking one
-   large diagram.
-7. Prefer tables when the user is choosing among options, responsibilities, or phases.
-8. Keep the usual visual payload small enough to inspect quickly:
-   - roughly one diagram with up to about 9 nodes, or
-   - one compact matrix with 3-6 rows.
+## Diagram Craft
+
+1. Quote Mermaid labels when they contain punctuation or multiple words: `A["Question or label"]`.
+2. Default to vertical diagrams (`TD`) unless horizontal causality is materially clearer.
+3. Split wide diagrams into stacked subgraphs or additional diagrams instead of shrinking one large diagram.
+4. Prefer tables when the user is choosing among options, responsibilities, or phases.
+5. Every node, edge, and table row must map to source evidence.
 
 ## File and Contract Inclusion Heuristics
 
-Include `Key Files / Contracts` when any of these are true:
+Include `Key Files / Contracts` on the HTML page when any of these are true:
 
 - the user is likely to act on the explanation immediately,
 - the explanation depends on a specific source file, route, or contract boundary,
@@ -36,11 +35,3 @@ Include `Key Files / Contracts` when any of these are true:
 
 Skip file tables when the explanation is purely conceptual and code pointers would distract from the
 main idea.
-
-## Suggested Packet Order
-
-1. `What This Is`
-2. `Short Explanation`
-3. `Visual Explanation`
-4. `Key Files / Contracts`
-5. `What To Do Next`

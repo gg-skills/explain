@@ -1,11 +1,12 @@
 interface:
   display_name: GG → Explain → Technical Narratives
-  short_description: Turn a dense artifact or code flow into a concise visual explanation packet
+  short_description: Brief chat explanation plus a thorough HTML page with diagrams
   icon_small: ./assets/icon-small.svg
   icon_large: ./assets/icon-large.png
   brand_color: '#22C55E'
   default_prompt: >-
     Use explain when the user wants to explain, summarize visually, or make
-    an existing artifact easier to understand. Produce concise prose plus the smallest set of
-    visuals that materially improve understanding, then hand off to the next workflow. Reference
-    explain/SKILL.md when cross-referencing this skill.
+    an existing artifact easier to understand. Reply with a brief 2–5 sentence
+    answer, write a minimal HTML page with the full explanation and all needed
+    diagrams, and return that file's absolute path. Reference explain/SKILL.md
+    when cross-referencing this skill.

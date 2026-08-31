@@ -1,5 +1,5 @@
 # explain
-Translates an existing plan, study, spec cluster, decision packet, architecture path, or code flow into a compact explanation packet — concise prose plus the smallest set of visuals that materially improve understanding. It is a translation and presentation layer, not a research or planning workflow.
+Translates an existing plan, study, spec cluster, decision packet, architecture path, or code flow into two surfaces: a **brief explanation in chat**, and a **thorough minimal HTML page** with every diagram and representation needed to fully understand the subject. It is a translation and presentation layer, not a research or planning workflow.
 
 ## Install
 
@@ -35,7 +35,7 @@ Triggers from `SKILL.md`:
 - Another workflow wants to offer a digestible explanation packet before planning or decision resolution.
 - The task is about translating known local evidence, not collecting new evidence.
 
-Skip when no explanation target or source artifact is available, when the request requires new evidence or new planning, when the source material is too contradictory or incomplete to explain honestly, or when the requested output medium has rendering constraints that cannot be satisfied.
+Skip when no explanation target or source artifact is available, when the request requires new evidence or new planning, or when the source material is too contradictory or incomplete to explain honestly.
 
 ## How it operates
 
@@ -45,39 +45,38 @@ Skip when no explanation target or source artifact is available, when the reques
 |-------|---------|
 | Source artifact | Any existing local artifact: plan file, study document, spec cluster, decision packet, runbook, code path, or explicit question with context supplied in the conversation. No remote fetching. |
 | Explanation target | The exact question or concept to be explained, scoped by the user. |
-| `references/visual-packet-patterns.md` | Read during step 2 to choose packet shape and visual form. |
+| `references/visual-packet-patterns.md` | Read during step 2 to choose the visuals the HTML page needs. |
 | `agents/diagram-selector.md` | Read-only sub-agent prompt, invoked when more than one visual form is plausible. |
-| `agents/clarity-auditor.md` | Read-only sub-agent prompt, invoked when a draft packet needs a second-opinion clarity pass. |
+| `agents/clarity-auditor.md` | Read-only sub-agent prompt, invoked when the draft brief or HTML needs a second-opinion pass. |
 | Environment | No environment variables required. No network calls. No authentication. |
 
 ### Outputs
 
 | Output | Format | Notes |
 |--------|--------|-------|
-| Explanation packet | Markdown prose rendered inline | Sections: What This Is, Short Explanation, Visual Explanation, Key Files / Contracts (optional), What To Do Next. |
-| Primary visual | Mermaid diagram or ASCII or comparison table | Prefer Mermaid (`flowchart TD`, `sequenceDiagram`, `stateDiagram-v2`) or a markdown table. Cap at 1–2 visuals per packet. |
-| Handoff context | Structured bullet list or table | Passed to `plan/SKILL.md`, `decisions/SKILL.md`, `study/SKILL.md`, or `chooseable-options/SKILL.md` when the explanation surfaces a clear next action. |
-
-No files are written to disk. Output is delivered inline in the conversation.
+| Chat brief | 2–5 sentences | Answer-first. No thorough dump. Ends with the HTML path and next action. |
+| Thorough HTML page | `.tmp/explain/YYYY-MM-DD-{subject}/explain.html` | Minimal standalone HTML with full explanation plus all diagrams/tables/other representations needed to fully understand. |
+| Absolute path | Filesystem path | Reported in chat so the user can open the thorough page. |
+| Handoff context | Short bullets | Passed to `plan`, `decisions`, `study`, or `chooseable-options` when a next action is clear. |
 
 ### External commands
 
 | Command | When used |
 |---------|-----------|
-| `npm run check:mermaid -- --files <packet.md>` | Optional: validates Mermaid syntax locally before publishing to a downstream renderer with constraints. Only needed when the packet will be committed or published. |
+| `npx tsx .agents/skills/explain/scripts/check-explanation-completeness.ts --latest` | Optional: scores the latest HTML page against the 12-item checklist. |
+| `npx tsx .agents/skills/explain/scripts/choose-visual-format.ts --question "..."` | Optional: recommend diagram types for the HTML page. |
 
 ### Side effects
 
-None. The skill reads existing artifacts and emits inline Markdown. It does not modify files, create branches, run agents in the background, or call external APIs.
+Writes one HTML file under `.tmp/explain/YYYY-MM-DD-{subject}/explain.html`. Does not create branches, run background agents, or call external APIs. Opening the page loads mermaid.js from a CDN so diagrams render.
 
 ### Mode toggles
 
 | Condition | Behavior |
 |-----------|----------|
-| `agents/diagram-selector.md` available | Invoke as a native Codex sub-agent to select the strongest single visual before drafting. |
-| `agents/clarity-auditor.md` available | Invoke as a native Codex sub-agent after drafting to pressure-test scan speed and fidelity. |
+| `agents/diagram-selector.md` available | Invoke as a native Codex sub-agent to select the visuals the HTML page needs. |
+| `agents/clarity-auditor.md` available | Invoke as a native Codex sub-agent after drafting to pressure-test chat brevity and HTML fidelity. |
 | Source evidence is thin or contradictory | Stop and hand off to `study/SKILL.md` or `research-online/SKILL.md` rather than guessing. |
-| Downstream renderer has Mermaid constraints | Run `npm run check:mermaid` and simplify diagram syntax. |
 
 ## Operational flow
 
@@ -86,19 +85,16 @@ flowchart TD
     A["User request or upstream handoff"] --> B["Normalize explanation target\n(source artifact + exact question + downstream lane)"]
     B --> C{"Source evidence\nsufficient?"}
     C -- No --> D["Hand off to study\nor research-online"]
-    C -- Yes --> E["Load references/visual-packet-patterns.md\nChoose packet shape and visual form"]
-    E --> F{"Visual form\nambiguous?"}
+    C -- Yes --> E["Load references/visual-packet-patterns.md\nChoose every visual the HTML page needs"]
+    E --> F{"Visual set\nambiguous?"}
     F -- Yes --> G["Invoke agents/diagram-selector.md\n(read-only sub-agent)"]
-    F -- No --> H["Draft explanation packet\nWhat This Is · Short Explanation · Visual · Files · Next"]
+    F -- No --> H["Write thorough HTML page\nfull explanation + all diagrams"]
     G --> H
     H --> I["Validate every node/row\nagainst known evidence"]
-    I --> J{"Packet too dense\nor vague?"}
+    I --> J{"Chat too long or\nHTML missing visuals?"}
     J -- Yes --> K["Invoke agents/clarity-auditor.md\n(read-only sub-agent)"]
     K --> H
-    J -- No --> L{"Downstream renderer\nhas Mermaid constraints?"}
-    L -- Yes --> M["npm run check:mermaid\nSimplify syntax if needed"]
-    M --> N["Deliver packet inline\n+ clear handoff action"]
-    L -- No --> N
+    J -- No --> N["Deliver brief in chat\n+ absolute path to HTML\n+ next action"]
 ```
 
 ## Layout
@@ -108,22 +104,25 @@ explain/
 ├── SKILL.md                          # Skill description, triggers, workflow, policy
 ├── README.md                         # This file
 ├── agents/
-│   ├── clarity-auditor.md            # Sub-agent prompt: clarity pass on draft packets
-│   └── diagram-selector.md           # Sub-agent prompt: choose strongest single visual
+│   ├── clarity-auditor.md            # Sub-agent prompt: chat brevity and HTML fidelity
+│   └── diagram-selector.md           # Sub-agent prompt: choose visuals the HTML page needs
 ├── assets/
 │   ├── icon-large.png
 │   ├── icon-large.svg
 │   ├── icon-master.png
 │   └── icon-small.svg
-└── references/
-    └── visual-packet-patterns.md     # Packet-shape chooser, scan-speed rules, inclusion heuristics
+├── references/
+│   └── visual-packet-patterns.md     # Visual-type chooser and file-inclusion heuristics
+└── scripts/
+    ├── check-explanation-completeness.ts
+    └── choose-visual-format.ts
 ```
 
 ## Quick start
 
 1. Point the skill at an existing artifact: paste file content, link a path, or describe the decision set.
 2. State the explanation goal: "explain the auth flow", "make this spec scannable", "show how these components interact".
-3. The skill returns a Markdown packet with a primary visual and a clear next action.
+3. The skill replies with a 2–5 sentence brief, writes `.tmp/explain/YYYY-MM-DD-{subject}/explain.html`, and reports that file's absolute path.
 
 Example invocation:
 
@@ -133,15 +132,15 @@ Example invocation:
 
 ## Resources
 
-- `references/visual-packet-patterns.md` — packet shape selection table, scan-speed rules, file-inclusion heuristics.
-- `agents/diagram-selector.md` — sub-agent for choosing the strongest single visual type.
-- `agents/clarity-auditor.md` — sub-agent for pressure-testing scan speed and fidelity.
+- `references/visual-packet-patterns.md` — visual-type selection table and file-inclusion heuristics.
+- `agents/diagram-selector.md` — sub-agent for choosing the visuals the HTML page needs.
+- `agents/clarity-auditor.md` — sub-agent for pressure-testing chat brevity and HTML fidelity.
 - Cross-skill handoffs: `decisions/SKILL.md`, `study/SKILL.md`, `plan/SKILL.md`, `specs/SKILL.md`, `chooseable-options/SKILL.md`, `text-architecture`.
 
 ## Caveats
 
 - **Translation only.** This skill does not perform research, collect new evidence, or make decisions. If the source artifact does not exist, invoke `study/SKILL.md` or `plan/SKILL.md` first.
 - **Evidence-grounded.** Every visual node, table row, and file reference must map back to verified evidence. Do not cite repository paths that have not been confirmed.
-- **1–2 visuals max.** Adding more diagrams slows scanning. Use tables for comparisons, a single Mermaid diagram for flow or state.
-- **Mermaid rendering.** Mermaid syntax varies by renderer. Quote multi-word labels (`A["My label"]`) and validate with `npm run check:mermaid` before publishing to constrained renderers.
-- **No persistent output.** The packet is delivered inline. If a permanent artifact is needed, the caller is responsible for writing it to disk.
+- **Two surfaces.** Chat is the brief. The HTML page is the thorough version, with every diagram needed to fully understand. Always return the absolute path.
+- **Minimal HTML.** One standalone file. Mermaid diagrams in `<pre class="mermaid">` plus mermaid.js. No app chrome.
+- **Mermaid labels.** Quote multi-word labels (`A["My label"]`).

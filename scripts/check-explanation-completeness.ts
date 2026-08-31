@@ -1,19 +1,19 @@
 #!/usr/bin/env npx tsx
 
 /**
- * @fileoverview CLI entrypoint that scores explain markdown explanation packets against the
+ * @fileoverview CLI entrypoint that scores explain HTML (or legacy markdown) artifacts against the
  * 12-item Explanation Quality Checklist and prints a human-readable or JSON deliverability report.
  *
- * This file owns argv parsing, latest-packet discovery under `.tmp/explain/`, regex-backed
+ * This file owns argv parsing, latest-artifact discovery under `.tmp/explain/`, regex-backed
  * checklist heuristics, weighted scoring, and stdout/stderr reporting (including `process.exit` on
  * usage or read errors).
- * Flow: argv -> resolve packet path (`--packet <path>` | `--latest`) -> read markdown -> evaluate
- * checklist rows -> aggregate score and tier -> print report.
+ * Flow: argv -> resolve packet path (`--packet <path>` | `--latest`) -> read HTML/markdown ->
+ * evaluate checklist rows -> aggregate score and tier -> print report.
  *
  * @testing CLI: npx tsx .agents/skills/explain/scripts/check-explanation-completeness.ts --latest
  * @testing CLI: npx tsx .agents/skills/explain/scripts/check-explanation-completeness.ts --packet <path-to-packet.md> [--json]
  *
- * @see skills/explain/SKILL.md - Canonical explain skill that defines explanation packet shape and checklist semantics this scanner enforces.
+ * @see skills/explain/SKILL.md - Canonical explain skill that defines HTML explanation page shape and checklist semantics this scanner enforces.
  * @see skills/explain/references/visual-packet-patterns.md - Visual packet pattern catalog referenced by checklist item heuristics in this script.
  * @see docs/TYPESCRIPT_STANDARDS_DOCUMENTATION_FILE_OVERVIEWS.md - File-overview documentation standard governing this module header contract.
  * @documentation reviewed=2026-05-22 standard=FILE_OVERVIEW_STANDARDS_TYPESCRIPT@3
@@ -77,16 +77,16 @@ interface CompletenessReport {
 const CHECKLIST_ITEMS: Omit<ChecklistItem, "checked">[] = [
   { number: 1, name: "Source artifact identified", description: "Explanation target has existing source", required: true, weight: 2 },
   { number: 2, name: "Target question clarified", description: "Exact question being answered is stated", required: true, weight: 2 },
-  { number: 3, name: "Packet shape chosen", description: "Visual form selected from visual-packet-patterns.md", required: true, weight: 1 },
-  { number: 4, name: "Answer-first prose", description: "Lead with 2–5 sentences of concise answer", required: true, weight: 2 },
-  { number: 5, name: "Primary visual present", description: "One strong visual (Mermaid/ASCII/table)", required: true, weight: 2 },
-  { number: 6, name: "Visual validated", description: "Mermaid syntax checked", required: true, weight: 1 },
+  { number: 3, name: "Visuals chosen", description: "Diagram types selected for full understanding", required: true, weight: 1 },
+  { number: 4, name: "Answer-first prose", description: "HTML leads with a direct answer", required: true, weight: 2 },
+  { number: 5, name: "HTML visuals present", description: "At least one diagram, table, or SVG for a thorough page", required: true, weight: 2 },
+  { number: 6, name: "Diagrams wired to render", description: "Mermaid blocks use pre.mermaid and mermaid.js, or no mermaid is used", required: true, weight: 1 },
   { number: 7, name: "File pointers contextual", description: "Only included when they improve actionability", required: false, weight: 1 },
   { number: 8, name: "Evidence grounded", description: "Every claim maps to source artifact", required: true, weight: 2 },
   { number: 9, name: "Uncertainties called out", description: "Open questions explicitly stated", required: false, weight: 1 },
   { number: 10, name: "What To Do Next included", description: "Clear downstream action or next skill", required: true, weight: 2 },
-  { number: 11, name: "Scan speed verified", description: "Packet reads in < 30 seconds", required: false, weight: 1 },
-  { number: 12, name: "Visual count ≤ 2", description: "Only 1–2 visuals maximum", required: true, weight: 1 },
+  { number: 11, name: "HTML written to disk", description: "Artifact is an .html page under .tmp/explain/", required: true, weight: 2 },
+  { number: 12, name: "Standalone HTML page", description: "Minimal HTML document with doctype, html, body", required: true, weight: 1 },
 ];
 
 // ============================================================================
@@ -100,8 +100,13 @@ const CHECKLIST_ITEMS: Omit<ChecklistItem, "checked">[] = [
  * Uses heading and bold-line regexes; supplies defaults when expected patterns are missing.
  */
 function extractMetadata(content: string): ExplanationMetadata {
-  const titleMatch = content.match(/^#\s*Explain:\s*(.+)/m);
-  const questionMatch = content.match(/\*\*Question Answered:\*\*\s*(.+)/mi);
+  const titleMatch =
+    content.match(/<title>\s*([^<]+?)\s*<\/title>/i) ||
+    content.match(/<h1[^>]*>\s*(?:Explain:\s*)?([^<]+?)\s*<\/h1>/i) ||
+    content.match(/^#\s*Explain:\s*(.+)/m);
+  const questionMatch =
+    content.match(/<strong>Question:<\/strong>\s*([^<]+)/i) ||
+    content.match(/\*\*Question Answered:\*\*\s*(.+)/mi);
   
   return {
     title: titleMatch?.[1]?.trim() || "Untitled Explanation",
@@ -119,7 +124,7 @@ function extractMetadata(content: string): ExplanationMetadata {
  */
 function guessTier(content: string): string {
   const wordCount = content.split(/\s+/).length;
-  const hasVisual = /```mermaid|```ascii|```graph|\|/m.test(content);
+  const hasVisual = hasVisualSupport(content);
   const hasNextStep = /What To Do Next|NEXT STEPS/i.test(content);
   
   if (wordCount > 500 && hasVisual && hasNextStep) return "Full";
@@ -128,22 +133,10 @@ function guessTier(content: string): string {
 }
 
 /**
- * Counts fenced mermaid/ascii blocks and simple markdown table rows in the packet.
- *
- * @remarks
- * Regex-based counts for checklist item 12; not a full markdown AST.
+ * Whether the artifact includes at least one diagram, table, or SVG representation.
  */
-function countVisuals(content: string): number {
-  let count = 0;
-  const mermaidBlocks = content.match(/```mermaid[\s\S]*?```/g);
-  const asciiBlocks = content.match(/```ascii[\s\S]*?```/g);
-  const tables = content.match(/\n\|.+\|.+\|/g);
-  
-  if (mermaidBlocks) count += mermaidBlocks.length;
-  if (asciiBlocks) count += asciiBlocks.length;
-  if (tables) count += tables.length;
-  
-  return count;
+function hasVisualSupport(content: string): boolean {
+  return /class=["']mermaid["']|```mermaid|<svg[\s>]|<table\b|\n\|.+\|.+\|/i.test(content);
 }
 
 /**
@@ -156,16 +149,20 @@ function checkItem(content: string, item: Omit<ChecklistItem, "checked">): boole
   switch (item.number) {
     case 1: return /\.plans\/|\.studies\/|plan-|study-|decision-|spec-|source.*artifact/i.test(content);
     case 2: return /question|answered|what this is/i.test(content);
-    case 3: return /visual.*packet|shape|pattern|references\//i.test(content);
-    case 4: return /^#.*\n|^##\s+\w/m.test(content);
-    case 5: return /```mermaid|```ascii|\|/m.test(content);
-    case 6: return /check:mermaid|mermaid.*validated/i.test(content) || !/```mermaid/.test(content);
+    case 3: return hasVisualSupport(content) || /visual.*packet|shape|pattern|references\//i.test(content);
+    case 4: return /<h1\b|^#\s+/m.test(content);
+    case 5: return hasVisualSupport(content);
+    case 6: {
+      const hasMermaidBlock = /```mermaid|<pre[^>]*class=["']mermaid["']/.test(content);
+      if (!hasMermaidBlock) return true;
+      return /mermaid\.esm\.min\.mjs|mermaid\.initialize/.test(content);
+    }
     case 7: return true; // Optional - pass if not checked, it's conditional
     case 8: return /\/\/|\.ts|\.md|\.json|path|file/i.test(content);
     case 9: return /uncertainty|open.*question|unknown|gap/i.test(content) || item.required === false;
     case 10: return /What To Do Next|NEXT STEPS|next.*action/i.test(content);
-    case 11: return true; // Optional - hard to verify automatically
-    case 12: return countVisuals(content) <= 2;
+    case 11: return false; // filled by checkItemWithPath
+    case 12: return /<!DOCTYPE html>/i.test(content) && /<html[\s>]/.test(content) && /<body[\s>]/.test(content);
     default: return false;
   }
 }
@@ -175,10 +172,11 @@ function checkItem(content: string, item: Omit<ChecklistItem, "checked">): boole
 // ============================================================================
 
 /**
- * Resolves the newest explanation markdown under `.tmp/explain/` when `--latest` is used.
+ * Resolves the newest explanation HTML (preferred) or markdown under `.tmp/explain/`.
  *
  * @remarks
- * I/O: reads directories under `.tmp/explain`, picks the last sorted subfolder, then first `.md` file.
+ * I/O: reads directories under `.tmp/explain`, picks the last sorted subfolder, then
+ * `explain.html`, any `.html`, or a non-README `.md`.
  */
 function findLatestExplanation(): string | null {
   try {
@@ -191,16 +189,34 @@ function findLatestExplanation(): string | null {
       .reverse();
     
     for (const dir of dirs) {
-      const files = readdirSync(join(tmpDir, dir))
-        .filter(f => f.endsWith(".md") && !f.includes("README"));
-      if (files.length > 0) {
-        return join(tmpDir, dir, files[0]);
+      const files = readdirSync(join(tmpDir, dir));
+      if (files.includes("explain.html")) {
+        return join(tmpDir, dir, "explain.html");
+      }
+      const html = files.find(f => f.endsWith(".html"));
+      if (html) {
+        return join(tmpDir, dir, html);
+      }
+      const markdown = files.find(f => f.endsWith(".md") && !f.includes("README"));
+      if (markdown) {
+        return join(tmpDir, dir, markdown);
       }
     }
   } catch {
     return null;
   }
   return null;
+}
+
+function checkItemWithPath(
+  content: string,
+  packetPath: string,
+  item: Omit<ChecklistItem, "checked">,
+): boolean {
+  if (item.number === 11) {
+    return packetPath.endsWith(".html");
+  }
+  return checkItem(content, item);
 }
 
 /**
@@ -217,7 +233,7 @@ function checkExplanation(packetPath: string, json: boolean = false): void {
     
     const checklist = CHECKLIST_ITEMS.map(item => ({
       ...item,
-      checked: checkItem(content, item),
+      checked: checkItemWithPath(content, packetPath, item),
     }));
     
     const score = checklist.reduce((sum, item) => 
@@ -295,7 +311,7 @@ const jsonArg = args.includes("--json");
 if (!packetArg && !latestArg) {
   console.log("Usage: check-explanation-completeness.ts --packet <path> | --latest [--json]");
   console.log("\nExamples:");
-  console.log("  npx tsx check-explanation-completeness.ts --packet .tmp/explain/2026-05-19-test/explain-test.md");
+  console.log("  npx tsx check-explanation-completeness.ts --packet .tmp/explain/2026-05-19-test/explain.html");
   console.log("  npx tsx check-explanation-completeness.ts --latest");
   console.log("  npx tsx check-explanation-completeness.ts --latest --json");
   process.exit(1);

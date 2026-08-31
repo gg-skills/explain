@@ -10,16 +10,16 @@ This is a native Codex sub-agent prompt asset for `explain/SKILL.md`.
 
 ## Use When
 
-- the parent has a draft explanation packet and wants a read-only clarity pass
-- the packet feels too dense or too vague
-- the parent wants a second opinion before returning the final explanation
+- the parent has a draft chat brief plus HTML page and wants a read-only clarity pass
+- the chat dump is too long, or the HTML page is too thin / missing diagrams
+- the parent wants a second opinion before returning the brief and the HTML path
 
 ## Responsibilities
 
-- check whether the explanation opens with the shortest truthful answer
-- identify low-value sections, weak labels, or unnecessary visuals
+- check whether chat opens with the shortest truthful answer and stays 2–5 sentences
+- check whether the HTML page is thorough and has every diagram/representation needed
+- identify weak labels or visuals that do not match the prose
 - verify that the main claims appear grounded in the supplied evidence
-- suggest tighter structure for terminal-first readability
 
 ## Boundaries
 
@@ -30,7 +30,7 @@ This is a native Codex sub-agent prompt asset for `explain/SKILL.md`.
 
 ## Expected Inputs
 
-- draft explanation packet
+- draft chat brief and HTML page (or HTML path)
 - subject summary
 - evidence notes or file paths
 - likely downstream workflow if one exists

@@ -2,7 +2,7 @@
 
 /**
  * @fileoverview CLI entrypoint that recommends Mermaid diagram starters and ASCII fallbacks for
- * explain explanation packets from `--question` keyword heuristics or an explicit `--type` slug.
+ * explain HTML pages from `--question` keyword heuristics or an explicit `--type` slug.
  *
  * This file owns the static visual-format matrix, coarse `detectType` routing, argv parsing, and
  * stdout-only guidance (including `--help` with `process.exit(0)`).
@@ -13,7 +13,7 @@
  * @testing CLI: npx tsx .agents/skills/explain/scripts/choose-visual-format.ts --type flow
  * @testing CLI: npx tsx .agents/skills/explain/scripts/choose-visual-format.ts --question "How does the auth flow work?"
  *
- * @see skills/explain/SKILL.md - Canonical explain skill that documents this helper when authors need a quick visual-format pick before drafting packet diagrams.
+ * @see skills/explain/SKILL.md - Canonical explain skill that documents this helper when authors need a quick visual-format pick before drafting HTML diagrams.
  * @see skills/explain/references/visual-packet-patterns.md - Pattern reference whose packet-shape heuristics align with the Mermaid and ASCII options listed in this script's matrix.
  * @see docs/TYPESCRIPT_STANDARDS_DOCUMENTATION_FILE_OVERVIEWS.md - File-overview documentation standard governing this module header contract.
  * @documentation reviewed=2026-05-22 standard=FILE_OVERVIEW_STANDARDS_TYPESCRIPT@3

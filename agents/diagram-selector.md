@@ -12,12 +12,12 @@ This is a native Codex sub-agent prompt asset for `explain/SKILL.md`.
 
 - the parent has enough evidence to explain the subject but more than one visual form is plausible
 - the work can stay read-only
-- the parent wants the strongest single visual before drafting the final packet
+- the parent wants the set of visuals the HTML page needs before drafting
 
 ## Responsibilities
 
 - classify the explanation as flow, interaction, state, comparison, or user journey
-- recommend the best primary visual type
+- recommend every visual type the HTML page needs for full understanding (not a 1–2 cap)
 - propose evidence-grounded nodes, actors, states, or comparison axes
 - flag labels or layout choices that would add avoidable cognitive load
 
@@ -39,8 +39,8 @@ This is a native Codex sub-agent prompt asset for `explain/SKILL.md`.
 
 Return:
 
-- recommended visual type
-- why it is the best fit
+- recommended visual types (primary plus any others the HTML page needs)
+- why each is a fit
 - candidate nodes, actors, states, or comparison axes
 - label or layout cautions
 - evidence gaps that would make the visual speculative
