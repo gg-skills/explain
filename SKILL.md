@@ -125,7 +125,7 @@ Before delivering, run these consistency checks. A result that fails any check m
 5. The HTML page is a **minimal standalone document** with all visual support necessary to fully understand (diagrams, tables, journeys, structure views). Include every representation that removes real ambiguity. Do not cap the HTML at one or two visuals.
 6. Chat stays brief: 2–5 sentences, answer-first. Do not paste the HTML contents into chat.
 7. Keep explanations grounded in repository-relative file paths, concrete symbols, or named artifacts whenever they matter.
-8. End with the clearest next downstream action when one exists; explanation alone is not implementation.
+8. End with the clearest next downstream action when one exists; explanation alone is not implementation. Present those next actions per `chooseable-options/SKILL.md` (printed tokens **and** native Ask User picker when available).
 
 ## Output Contract
 
@@ -271,7 +271,7 @@ Load only the subset the task needs.
 
 ## Cross-Skill Coordination
 
-- `chooseable-options/SKILL.md` — use when the user needs a lower-cognitive-load explanation before selecting a lane.
+- `chooseable-options/SKILL.md` — present What To Do Next as printed tokens plus the harness Ask User picker when that tool is available.
 - `decisions/SKILL.md` — use when option comparison exists but the user needs a condensed visual framing before choosing.
 - `study/SKILL.md` — use when study findings are sound but too dense to act on quickly.
 - `specs/SKILL.md` — use when a spec cluster needs a shared visual explanation before plan selection or batching.
