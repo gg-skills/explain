@@ -41,7 +41,7 @@ Use this skill to translate existing local evidence into two surfaces: a **brief
 
 - Apply repository guidance consistently with `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md`.
 - Prefer existing local evidence, repo artifacts, and code references over fresh discovery.
-- If diagram-format selection needs deeper guidance, use `text-architecture` and `references/visual-packet-patterns.md`.
+- If diagram-format selection needs deeper guidance, use `references/visual-packet-patterns.md`.
 - When native Codex sub-agents are available, use the skill-local prompt assets under `agents/`:
   - `diagram-selector.md` to choose the visuals the HTML page needs,
   - `clarity-auditor.md` to pressure-test chat brevity and HTML fidelity before finalizing.
@@ -277,7 +277,6 @@ Load only the subset the task needs.
 - `study/SKILL.md` — use when study findings are sound but too dense to act on quickly.
 - `specs/SKILL.md` — use when a spec cluster needs a shared visual explanation before plan selection or batching.
 - `plan/SKILL.md` — use after the explanation has made the execution path clear.
-- `text-architecture` — use when diagram selection or format tradeoffs need deeper guidance.
 
 ## Handoff Outputs
 
@@ -328,4 +327,4 @@ The `agents/` directory contains two native Codex sub-agent prompts:
 - `agents/diagram-selector.md` — read-only prompt for choosing the visuals the HTML page needs.
 - `agents/clarity-auditor.md` — read-only prompt for pressure-testing chat brevity and HTML fidelity.
 
-[^rt]: `npx tsx` accepts any standard runner — `bunx tsx`, `pnpm dlx tsx`, `deno run -A npm:tsx`, `node --import tsx`, or `yarn dlx tsx`. The first five auto-fetch `tsx` on demand; only `node --import tsx` requires `tsx` to be installed locally first (`npm i -D tsx`, or `npm i -g tsx` if you cannot reach the npm registry). Bun users can also skip `tsx` entirely and run TypeScript directly via `bun <script>`. Pick whichever your project ships. The canonical runtime decision table lives in the `skills-manager` skill under `Runtime Selection` (only available when working in the full `gg-skills` monorepo).
+[^rt]: `npx tsx` accepts any standard runner — `bunx tsx`, `pnpm dlx tsx`, `deno run -A npm:tsx`, `node --import tsx`, or `yarn dlx tsx`. The first five auto-fetch `tsx` on demand; only `node --import tsx` requires `tsx` to be installed locally first (`npm i -D tsx`, or `npm i -g tsx` if you cannot reach the npm registry). Bun users can also skip `tsx` entirely and run TypeScript directly via `bun <script>`. Pick whichever your project ships.

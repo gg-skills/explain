@@ -24,7 +24,7 @@ mkdir -p ~/.claude/skills
 git -C ~/.claude/skills clone git@github.com:gg-skills/explain.git
 ```
 
-Restart your agent or reload skills after installation. See the parent [`skills` catalog repo](https://github.com/gg-skills/skills) for the full catalog.
+Restart your agent or reload skills after installation. Browse public skills on the [GG Skills organization profile](https://github.com/gg-skills).
 
 ## When to use
 
@@ -132,10 +132,10 @@ Example invocation:
 
 ## Resources
 
-- `references/visual-packet-patterns.md` — visual-type selection table and file-inclusion heuristics.
+- [Visual patterns](references/visual-packet-patterns.md) — diagram-format selection and guidance on which files to include.
 - `agents/diagram-selector.md` — sub-agent for choosing the visuals the HTML page needs.
 - `agents/clarity-auditor.md` — sub-agent for pressure-testing chat brevity and HTML fidelity.
-- Cross-skill handoffs: `decisions/SKILL.md`, `study/SKILL.md`, `plan/SKILL.md`, `specs/SKILL.md`, `chooseable-options/SKILL.md`, `text-architecture`.
+- Cross-skill handoffs: `decisions/SKILL.md`, `study/SKILL.md`, `plan/SKILL.md`, `specs/SKILL.md`, `chooseable-options/SKILL.md`.
 
 ## Caveats
 
